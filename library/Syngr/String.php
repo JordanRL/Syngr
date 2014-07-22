@@ -2,6 +2,9 @@
 /**
  * String Class
  *
+ * This really ought to be updated to use mb_()-style methods,
+ * would bake UTF-8 support in like it ain't no thang.
+ *
  * @author Hassan Khan <contact@hassankhan.me>
  */
 namespace Syngr;
@@ -37,9 +40,9 @@ class String extends Object {
      * Constructor function for string object
      * @param string $string - Textual data as represented by string
      */
-    public function __construct($string = '')
+    public function __construct($string = null)
     {
-        parent::__construct(array('content' => $string));
+        parent::__construct($string);
     }
 
     /**
@@ -48,7 +51,7 @@ class String extends Object {
      */
     public function __toString()
     {
-        return $this->getContent();
+        return $this->content;
     }
 
     /**
@@ -57,7 +60,7 @@ class String extends Object {
      */
     public function length()
     {
-        return strlen($this->getContent());
+        return strlen($this->content);
     }
 
     // Currently replaces current content with new data
@@ -66,14 +69,13 @@ class String extends Object {
     // EDIT : Maybe it belongs in the array class?
     public function join($delimiter = '', $data)
     {
-        $this->setContent(implode($delimiter, $data));
-        return $this;
+        return new String(implode($delimiter, $data));
     }
 
     // For greater flexibility, make this work with regex too
     public function split($splitter)
     {
-        $text = $this->getContent();
+        $text = $this->content;
         if (is_int($splitter)) {
             $text = str_split($text, $splitter);
         }
@@ -88,7 +90,7 @@ class String extends Object {
 
     public function match($match_string, $flags = array())
     {
-        $string            = $this->getContent();
+        $string            = $this->content;
 
         // Regex
         if (is_string($match_string) && $this->is_regex($match_string)) {
@@ -138,14 +140,12 @@ class String extends Object {
 
     public function utf8_encode()
     {
-        $this->setContent(utf8_encode($this->getContent()));
-        return $this;
+        return new String(utf8_encode($this->content));
     }
 
     public function utf8_decode()
     {
-        $this->setContent(utf8_decode($this->getContent()));
-        return $this;
+        return new String(utf8_decode($this->content));
     }
 
     /**
@@ -155,31 +155,43 @@ class String extends Object {
      */
     public function hash($algorithm = 'MD5')
     {
-        $this->setContent(hash($algorithm, $this->getContent()));
-        return $this;
+        return new String(hash($algorithm, $this->content));
     }
-    
+
     /**
-     * Returns a blowfish encrypted string. This is a adaptation of IRCMaxwell's password_hash compat function
+     * Returns a blowfish-formatted string. This is a adaptation of
+     * ircmaxwell's password_compat library
      * @param integer $cost     - The cost of the operation
      * @return \Syngr\String
+     * @author jordan-ed
      */
     public function bcrypt($cost = 13) {
-        if (function_exists("password_hash")) {
-            $this->setContent(password_hash($this->getContent(), PASSWORD_BCRYPT, array("cost" => $cost)));
-            
-            return $this;
-        } else {
-            if ($cost < 4 || $cost > 31) {
-                trigger_error(sprintf("password_hash(): Invalid bcrypt cost parameter specified: %d", $cost), E_USER_WARNING);
-                return null;
-            }
+        $string = $this->content;
+
+        if ($cost < 4 || $cost > 31) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'password_hash(): Invalid bcrypt cost parameter specified: %d',
+                    $cost
+                ),
+                E_USER_WARNING
+            );
+        }
+
+        if (function_exists('password_hash')) {
+            $string = password_hash(
+                $string,
+                PASSWORD_BCRYPT,
+                array('cost' => $cost)
+            );
+        }
+        else {
             // The length of salt to generate
             $raw_salt_len = 16;
             // The length required in the final serialization
             $required_salt_len = 22;
             $hash_format = sprintf("$2y$%02d$", $cost);
-            
+
             $buffer = '';
             $buffer_valid = false;
             if (function_exists('mcrypt_create_iv') && !defined('PHALANGER')) {
@@ -216,34 +228,24 @@ class String extends Object {
                     }
                 }
             }
-            
+
             $salt = str_replace('+', '.', base64_encode($buffer));
             $salt = substr($salt, 0, $required_salt_len);
-
             $hash = $hash_format . $salt;
-
-            $ret = crypt($this->getContent(), $hash);
-
-            if (!is_string($ret) || strlen($ret) <= 13) {
-                return $this;
-            }
-            
-            $this->setContent($ret);
-            
-            return $this;
+            $string = crypt($string, $hash);
         }
+
+        return new String($string);
     }
 
     public function html_decode()
     {
-        $this->setContent(html_entity_decode($this->getContent()));
-        return $this;
+        return new String(html_entity_decode($this->content));
     }
 
     public function html_encode()
     {
-        $this->setContent(htmlentities($this->getContent()));
-        return $this;
+        return new String(htmlentities($this->content));
     }
 
     /**
@@ -254,15 +256,14 @@ class String extends Object {
      */
     public function substring($start, $length = null)
     {
-        $string = $this->getContent();
+        $string = $this->content;
         $length = $length === null ? strlen($string) : $length;
-        $this->setContent(substr($string, $start, $length));
-        return $this;
+        return new String(substr($string, $start, $length));
     }
 
     public function trim($delimiter = ' ', $flags = array())
     {
-        $text = $this->getContent();
+        $text = $this->content;
         if ($delimiter === ' ') {
             if (in_array(self::STRING_LEFT, $flags)) {
                 $text = ltrim($text);
@@ -286,8 +287,7 @@ class String extends Object {
             }
         }
 
-        $this->setContent($text);
-        return $this;
+        return new String($text);
     }
 
     /**
@@ -296,8 +296,7 @@ class String extends Object {
      */
     public function uppercase()
     {
-        $this->setContent(strtoupper($this->getContent()));
-        return $this;
+        return new String(strtoupper($this->content));
     }
 
     /**
@@ -306,13 +305,12 @@ class String extends Object {
      */
     public function lowercase()
     {
-        $this->setContent(strtolower($this->getContent()));
-        return $this;
+        return new String(strtolower($this->content));
     }
 
     public function pad($length, $delimiter = ' ', $flags = array())
     {
-        $text = $this->getContent();
+        $text = $this->content;
         if (in_array(self::STRING_LEFT, $flags)) {
             $text = str_pad(
                 $text,
@@ -336,8 +334,7 @@ class String extends Object {
                 $delimiter
             );
         }
-        $this->setContent($text);
-        return $this;
+        return new String($text);
     }
 
     /**
@@ -346,8 +343,7 @@ class String extends Object {
      */
     public function reverse()
     {
-        $this->setContent(strrev($this->getContent()));
-        return $this;
+        return new String(strrev($this->content));
     }
 
     /**
@@ -360,7 +356,7 @@ class String extends Object {
     // Need to add regex support
     public function replace($search, $replace, $flags = array())
     {
-        $text = $this->getContent();
+        $text = $this->content;
         if($this->is_regex($search)) {
             $text = preg_replace($search, $replace, $text);
         }
@@ -372,17 +368,19 @@ class String extends Object {
                 $text = str_replace($search, $replace, $text);
             }
         }
-        $this->setContent($text);
-        return $this;
+        return new String($text);
     }
 
     /**
-     * Crude method to check for valid regex
+     * Validates regular expressions with different (mostly-used) delimiters
+     * and afterwards applies a hook to check if its valid
      * @param  string  $regex - The string to be validated as regex
      * @return boolean        - Returns true if valid regex, otherwise false
+     * @author AlexanderC <self@alexanderc.me>
      */
     public function is_regex($regex)
     {
-        return preg_match("/^\/|\/$/", $regex) === 1 ? true : false;
+        return 1 === preg_match("/^(\/|#|~|%|@|!).+(\/|#|~|%|@|!)(i|m|s|x|u|j)*$/ui", trim($regex))
+            && false !== @preg_match($regex, '');
     }
 }

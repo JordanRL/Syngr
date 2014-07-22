@@ -21,7 +21,7 @@ class Number extends Object {
      */
     public function __construct($number = null)
     {
-        parent::__construct(array('content' => $number));
+        parent::__construct($number);
     }
 
     /**
@@ -30,82 +30,95 @@ class Number extends Object {
      */
     public function __toString()
     {
-        return strval($this->getContent());
+        return strval($this->content);
     }
 
     public function value()
     {
-        return $this->getContent();
+        return $this->content;
     }
 
+    /**
+     * Static function that returns a random number. If required, optional lower
+     * and higher boundaries for the random value can be passed as parameters
+     * @param  integer $min Lower boundary
+     * @param  integer $max Higher boundary
+     * @return \Syngr\Number
+     */
+    public static function random($min = 0, $max = null)
+    {
+        $number = 0;
+        if ($min === 0 && $max === null){
+            $number = mt_rand();
+        }
+        else {
+            $number = mt_rand($min, $max);
+        }
+        return new Number($number);
+    }
+
+    /**
+     * Returns absolute of current value
+     * @return \Syngr\Number
+     */
     public function absolute()
     {
-        $number = (int) $this->getContent();
-        $this->setContent(abs($number));
-        return $this;
+        return new Number(abs($this->content));
     }
 
+    /**
+     * Returns rounded-up current value
+     * @return \Syngr\Number
+     */
     public function ceiling()
     {
-        $number = (float) $this->getContent();
-        $this->setContent(ceil($number));
-        return $this;
+        return new Number(ceil((double) $this->content));
     }
 
+    /**
+     * Returns rounded-down current value
+     * @return \Syngr\Number
+     */
     public function floor()
     {
-        $number = (float) $this->getContent();
-        $this->setContent(floor($number));
-        return $this;
+        return new Number(floor((double) $this->content));
     }
 
+    /**
+     * Returns current value rounded to a specified number of decimal places
+     * @param  integer $precision Number of decimal places
+     * @return \Syngr\Number
+     */
     public function round($precision = 0)
     {
-        $number = (float) $this->getContent();
-        $this->setContent(round($number, $precision));
-        return $this;
+        return new Number(round((double) $this->content, $precision));
     }
 
     public function max($values)
     {
-        $values[] = $this->getContent();
-        $this->setContent(max($values));
-        return $this;
+        $values[] = $this->content;
+        return new Number(max($values));
     }
 
     public function min($values)
     {
-        $values[] = $this->getContent();
-        $this->setContent(min($values));
-        return $this;
+        $values[] = $this->content;
+        return new Number(min($values));
     }
 
     public function sqrt()
     {
-        $this->setContent(sqrt($this->getContent()));
-        return $this;
-    }
-
-    public function random($min = 0, $max = null)
-    {
-        if ($min === 0 && $max === null){
-            $this->setContent(mt_rand());
-        }
-        else {
-            $this->setContent(mt_rand($min, $max));
-        }
-        return $this;
+        return new Number(sqrt($this->content));
     }
 
     public function exp($power)
     {
-        $this->setContent(exp($power));
-        return $this;
+        return new Number(exp($power));
     }
 
     public function log($base = 10)
     {
-        $number = $this->getContent();
+        $number = $this->content;
         if ($base === 10) {
             $number = log10($number);
         }
@@ -115,20 +128,17 @@ class Number extends Object {
         else{
             $number = log($number, $base);
         }
-        $this->setContent($number);
-        return $this;
+        return new Number($number);
     }
 
     public function pow($exponent = 1)
     {
-        $number = $this->getContent();
-        $this->setContent(pow($number, $exponent));
-        return $this;
+        return new Number(pow($this->content, $exponent));
     }
 
     public function cos($flags = array())
     {
-        $number = $this->getContent();
+        $number = $this->content;
         if (in_array(self::TRIG_INVERSE_HYPERBOLIC, $flags)) {
             $number = acosh($number);
         }
@@ -141,13 +151,12 @@ class Number extends Object {
         else {
             $number = cos($number);
         }
-        $this->setContent($number);
-        return $this;
+        return new Number($number);
     }
 
     public function sin($flags = array())
     {
-        $number = $this->getContent();
+        $number = $this->content;
         if (in_array(self::TRIG_INVERSE_HYPERBOLIC, $flags)) {
             $number = asinh($number);
         }
@@ -160,13 +169,12 @@ class Number extends Object {
         else {
             $number = sin($number);
         }
-        $this->setContent($number);
-        return $this;
+        return new Number($number);
     }
 
     public function tan($flags = array())
     {
-        $number = $this->getContent();
+        $number = $this->content;
         if (in_array(self::TRIG_INVERSE_HYPERBOLIC, $flags)) {
             $number = atanh($number);
         }
@@ -179,8 +187,7 @@ class Number extends Object {
         else {
             $number = tan($number);
         }
-        $this->setContent($number);
-        return $this;
+        return new Number($number);
     }
 
     /**
@@ -189,7 +196,7 @@ class Number extends Object {
      */
     public function is_finite()
     {
-        return is_finite($this->getContent());
+        return is_finite($this->content);
     }
 
     /**
@@ -198,7 +205,7 @@ class Number extends Object {
      */
     public function is_infinite()
     {
-        return is_infinite($this->getContent());
+        return is_infinite($this->content);
     }
 
     /**
@@ -207,7 +214,7 @@ class Number extends Object {
      */
     public function is_nan()
     {
-        return is_nan($this->getContent());
+        return is_nan($this->content);
     }
 
 }

@@ -80,7 +80,7 @@ class StringTest extends \PHPUnit_Framework_TestCase
      */
     public function testSplitByDelimiter()
     {
-        $this->object->setContent('foo:bar');
+        $this->object = new String('foo:bar');
         $this->assertCount(2, $this->object->split(':'));
     }
 
@@ -145,7 +145,7 @@ class StringTest extends \PHPUnit_Framework_TestCase
      */
     public function testMatchNaturalOrder()
     {
-        $this->object->setContent('img1');
+        $this->object = new String('img1');
         $this->assertTrue(
             $this->object->match('img1', array(String::ORDER_NATURAL))
         );
@@ -156,7 +156,7 @@ class StringTest extends \PHPUnit_Framework_TestCase
      */
     public function testMatchNaturalOrderFailure()
     {
-        $this->object->setContent('img1');
+        $this->object = new String('img1');
         $this->assertFalse(
             $this->object->match('img2', array(String::ORDER_NATURAL))
         );
@@ -167,7 +167,7 @@ class StringTest extends \PHPUnit_Framework_TestCase
      */
     public function testMatchNaturalOrderCaseInsensitive()
     {
-        $this->object->setContent('img1');
+        $this->object = new String('img1');
         $this->assertTrue(
             $this->object->match(
                 'IMG1',
@@ -181,7 +181,7 @@ class StringTest extends \PHPUnit_Framework_TestCase
      */
     public function testMatchNaturalOrderCaseInsensitiveFailure()
     {
-        $this->object->setContent('img1');
+        $this->object = new String('img1');
         $this->assertFalse(
             $this->object->match(
                 'IMG2',
@@ -211,7 +211,7 @@ class StringTest extends \PHPUnit_Framework_TestCase
      */
     public function testUtf8Encode()
     {
-        $this->object->setContent('Kissa käveli öisellä kadulla');
+        $this->object = new String('Kissa käveli öisellä kadulla');
         $this->assertEquals(
             'Kissa kÃ¤veli Ã¶isellÃ¤ kadulla',
             $this->object->utf8_encode()
@@ -223,7 +223,7 @@ class StringTest extends \PHPUnit_Framework_TestCase
      */
     public function testUtf8Decode()
     {
-        $this->object->setContent('Kissa kÃ¤veli Ã¶isellÃ¤ kadulla');
+        $this->object = new String('Kissa kÃ¤veli Ã¶isellÃ¤ kadulla');
         $this->assertEquals(
             'Kissa käveli öisellä kadulla',
             $this->object->utf8_decode()
@@ -253,11 +253,53 @@ class StringTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @covers Syngr\String::bcrypt()
+     * @requires PHP 5.5
+     */
+    public function testBcryptUsingPasswordHash()
+    {
+        $hash = $this->object->bcrypt();
+        $this->assertEquals($hash, crypt('foobar', $hash));
+    }
+
+    /**
+     * @covers Syngr\String::bcrypt()
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage password_hash(): Invalid bcrypt cost parameter specified: 1
+     */
+    public function testBcryptUsingInvalidCost()
+    {
+        $hash = $this->object->bcrypt(1);
+        // $this->assertEquals($hash, crypt('foobar', $hash));
+    }
+
+    /**
+     * @covers Syngr\String::bcrypt()
+     * @requires function mcrypt_create_iv
+     */
+    public function testBcryptUsingMcryptCreateIv()
+    {
+        $hash = $this->object->bcrypt();
+        $this->assertEquals($hash, crypt('foobar', $hash));
+    }
+
+    /**
+     * @covers Syngr\String::bcrypt()
+     * @requires function openssl_random_pseudo_bytes
+     */
+    public function testBcryptUsingOpenSSLRandomPseudoBytes()
+    {
+        define('PHALANGER', 'haha');
+        $hash = $this->object->bcrypt();
+        $this->assertEquals($hash, crypt('foobar', $hash));
+    }
+
+    /**
      * @covers Syngr\String::html_decode()
      */
     public function testHtml_decode()
     {
-        $this->object->setContent(
+        $this->object = new String(
             "I'll &quot;walk&quot; the &lt;b&gt;dog&lt;/b&gt; now"
         );
         $this->assertEquals(
@@ -271,7 +313,7 @@ class StringTest extends \PHPUnit_Framework_TestCase
      */
     public function testHtml_encode()
     {
-        $this->object->setContent(
+        $this->object = new String(
             "I'll \"walk\" the <b>dog</b> now"
         );
         $this->assertEquals(
@@ -295,7 +337,7 @@ class StringTest extends \PHPUnit_Framework_TestCase
      */
     public function testTrim()
     {
-        $this->object->setContent('   foobar   ');
+        $this->object = new String('   foobar   ');
         $this->assertEquals(
             'foobar',
             $this->object->trim());
@@ -306,7 +348,7 @@ class StringTest extends \PHPUnit_Framework_TestCase
      */
     public function testTrimLeft()
     {
-        $this->object->setContent('   foobar   ');
+        $this->object = new String('   foobar   ');
         $this->assertEquals(
             'foobar   ',
             $this->object->trim(' ', array(String::STRING_LEFT))
@@ -318,7 +360,7 @@ class StringTest extends \PHPUnit_Framework_TestCase
      */
     public function testTrimRight()
     {
-        $this->object->setContent('   foobar   ');
+        $this->object = new String('   foobar   ');
         $this->assertEquals(
             '   foobar',
             $this->object->trim(' ', array(String::STRING_RIGHT))
@@ -330,7 +372,7 @@ class StringTest extends \PHPUnit_Framework_TestCase
      */
     public function testTrimCharacters()
     {
-        $this->object->setContent('$$$foobar£££');
+        $this->object = new String('$$$foobar£££');
         $this->assertEquals(
             'foobar',
             $this->object->trim('$£')
@@ -342,7 +384,7 @@ class StringTest extends \PHPUnit_Framework_TestCase
      */
     public function testTrimCharactersLeft()
     {
-        $this->object->setContent('$$$foobar£££');
+        $this->object = new String('$$$foobar£££');
         $this->assertEquals(
             'foobar£££',
             $this->object->trim('$£', array(String::STRING_LEFT))
@@ -354,7 +396,7 @@ class StringTest extends \PHPUnit_Framework_TestCase
      */
     public function testTrimCharactersRight()
     {
-        $this->object->setContent('$$$foobar£££');
+        $this->object = new String('$$$foobar£££');
         $this->assertEquals(
             '$$$foobar',
             $this->object->trim('$£', array(String::STRING_RIGHT))
@@ -374,7 +416,7 @@ class StringTest extends \PHPUnit_Framework_TestCase
      */
     public function testLowercase()
     {
-        $this->object->setContent('FOOBAR');
+        $this->object = new String('FOOBAR');
         $this->assertEquals('foobar', $this->object->lowercase());
     }
 
